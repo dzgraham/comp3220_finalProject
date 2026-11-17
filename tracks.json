@@ -1,0 +1,275 @@
+{
+  "majors": {
+    "computer_science": {
+      "name": "Computer Science",
+      "level1_required": [
+        "COMP1126",
+        "COMP1127",
+        "COMP1161",
+        "COMP1210",
+        "COMP1220"
+      ],
+      "advanced_required": [
+        "COMP2140",
+        "COMP2171",
+        "COMP2190",
+        "COMP2201",
+        "COMP2211",
+        "COMP2340",
+        "COMP3101",
+        "COMP3161",
+        "COMP3220",
+        "COMP3901"
+      ],
+      "elective_blocks": [
+        {
+          "id": "cs_electives",
+          "type": "choose_credits",
+          "credits": 9,
+          "from_level": [2, 3],
+          "from_dept": "Computing",
+          "description": "9 credits from Level 2 or 3 Computing courses"
+        }
+      ]
+    },
+    "information_technology": {
+      "name": "Information Technology",
+      "level1_required": [
+        "COMP1126",
+        "COMP1127",
+        "COMP1161",
+        "COMP1210",
+        "COMP1220"
+      ],
+      "advanced_required": [
+        "COMP2140",
+        "COMP2190",
+        "COMP2340",
+        "COMP3161",
+        "COMP3901",
+        "INFO2101",
+        "INFO2111",
+        "INFO2180",
+        "INFO3106",
+        "INFO3110",
+        "INFO3155",
+        "INFO3171",
+        "INFO3180"
+      ],
+      "elective_blocks": [
+        {
+          "id": "it_dept_electives",
+          "type": "choose_credits",
+          "credits": 3,
+          "from_level": [2, 3],
+          "from_dept": "Computing",
+          "description": "3 credits from Level 2 or 3 Computing courses"
+        },
+        {
+          "id": "it_free_electives",
+          "type": "choose_credits",
+          "credits": 18,
+          "from_level": [1, 2, 3],
+          "from_dept": "Any",
+          "description": "18 credits from any discipline including Computing"
+        }
+      ]
+    },
+    "cybersecurity": {
+      "name": "Cybersecurity",
+      "level1_required": [
+        "COMP1126",
+        "COMP1127",
+        "COMP1161",
+        "COMP1210",
+        "COMP1220"
+      ],
+      "advanced_required": [
+        "COMP2130",
+        "COMP2140",
+        "COMP2190",
+        "COMP2201",
+        "COMP2211",
+        "COMP3161",
+        "COMP3220",
+        "COMP3901",
+        "INFO2180",
+        "INFO3106",
+        "INFO3155",
+        "INFO3165"
+      ],
+      "elective_blocks": [
+        {
+          "id": "cyber_electives",
+          "type": "choose_credits",
+          "credits": 6,
+          "from_level": [2, 3],
+          "from_dept": "Computing",
+          "description": "6 credits from Level 2 or 3 Computing courses"
+        }
+      ]
+    },
+    "software_engineering": {
+      "name": "Software Engineering",
+      "level1_required": [
+        "COMP1126",
+        "COMP1127",
+        "COMP1161",
+        "COMP1210",
+        "COMP1220"
+      ],
+      "advanced_required": [
+        "COMP2140",
+        "COMP2171",
+        "COMP2190",
+        "COMP2201",
+        "COMP2211",
+        "COMP3911",
+        "SWEN3130",
+        "SWEN3145",
+        "SWEN3165",
+        "SWEN3185",
+        "SWEN3920"
+      ],
+      "elective_blocks": [
+        {
+          "id": "se_electives",
+          "type": "choose_credits",
+          "credits": 3,
+          "from_level": [2, 3],
+          "from_dept": "Computing",
+          "description": "3 credits from Level 2 or 3 Computing courses"
+        }
+      ]
+    }
+  },
+
+  "tracks": {
+    "computer_science": {
+      "web_development": {
+        "name": "Web & Mobile Development",
+        "preferred_electives": [
+          "INFO2180",
+          "INFO3180",
+          "INFO3171",
+          "INFO3435",
+          "SWEN3001"
+        ],
+        "rationale": "Focuses on front-end, web back-end, and mobile application development."
+      },
+      "database": {
+        "name": "Database Administration",
+        "preferred_electives": ["COMP3161", "COMP3162", "INFO2111"],
+        "rationale": "Focuses on managing, maintaining, securing and optimizing computer database systems."
+      },
+
+      "ai_data": {
+        "name": "AI & Data Science",
+        "preferred_electives": ["COMP3162", "COMP3220", "COMP3652", "COMP3029"],
+        "rationale": "Focuses on data science principles, artificial intelligence, and language/quantum computing."
+      },
+      "networking_security": {
+        "name": "Networking & Security",
+        "preferred_electives": ["COMP3191", "COMP3192", "INFO3155", "INFO3165"],
+        "rationale": "Focuses on network principles, implementation, and information assurance/security."
+      },
+      "theory": {
+        "name": "Theory & Algorithms",
+        "preferred_electives": ["COMP3702", "COMP3652", "COMP3029"],
+        "rationale": "Focuses on computation theory, language processors, and advanced algorithmic concepts."
+      }
+    },
+    "information_technology": {
+      "network_admin": {
+        "name": "Network Administration",
+        "preferred_electives": ["COMP3191", "COMP3192", "INFO3106"],
+        "rationale": "Focuses on networking principles, implementation, and systems administration."
+      },
+      "web_systems": {
+        "name": "Web Systems",
+        "preferred_electives": ["INFO3171", "INFO3180", "INFO3435"],
+        "rationale": "Focuses on user interface design, advanced web development, and e-commerce."
+      },
+      "it_security": {
+        "name": "IT Security",
+        "preferred_electives": ["INFO3155", "INFO3165", "COMP2190"],
+        "rationale": "Focuses on information assurance, digital forensics, and net-centric computing."
+      }
+    },
+    "cybersecurity": {
+      "digital_forensics": {
+        "name": "Digital Forensics",
+        "preferred_electives": ["INFO3165", "INFO3155"],
+        "rationale": "Focuses on security analysis, digital forensics, and information assurance."
+      }
+    },
+    "software_engineering": {
+      "mobile_apps": {
+        "name": "Mobile Application Development",
+        "preferred_electives": ["SWEN3001", "INFO3171", "INFO2180"],
+        "rationale": "Focuses on Android development, UI design, and dynamic web development."
+      },
+      "architecture_quality": {
+        "name": "Architecture & Quality",
+        "preferred_electives": ["SWEN3120", "SWEN3165", "SWEN3185"],
+        "rationale": "Focuses on software architecture, testing, and formal methods."
+      },
+      "project_management": {
+        "name": "Project Management",
+        "preferred_electives": ["SWEN3130", "SWEN3145", "INFO3110"],
+        "rationale": "Focuses on project management, software modelling, and information systems."
+      }
+    }
+  },
+
+  "math_tracks": {
+    "linear_algebra": {
+      "name": "Linear Algebra",
+      "preferred_electives": ["MATH2110", "MATH3110", "MATH3210"],
+      "rationale": "Advanced linear algebra and matrix theory."
+    },
+    "statistics": {
+      "name": "Statistics",
+      "preferred_electives": ["STAT2001", "STAT2010", "STAT3010"],
+      "rationale": "Probability, statistical inference, and applied statistics."
+    },
+    "calculus": {
+      "name": "Calculus Focus",
+      "preferred_electives": ["MATH2120", "MATH2130", "MATH3120"],
+      "rationale": "Multivariable calculus, real analysis, differential equations."
+    },
+    "abstract_algebra": {
+      "name": "Abstract Algebra",
+      "preferred_electives": ["MATH2310", "MATH3310", "MATH3320"],
+      "rationale": "Group theory, ring theory, and algebraic structures."
+    },
+    "discrete_math": {
+      "name": "Discrete Mathematics",
+      "preferred_electives": ["COMP2201", "MATH2410", "MATH3410"],
+      "rationale": "Discrete structures, combinatorics, graph theory."
+    }
+  },
+
+  "course_areas": {
+    "MATH1141": "linear_algebra",
+    "MATH1142": "calculus",
+    "MATH1151": "calculus",
+    "MATH1152": "discrete_math",
+    "MATH2110": "linear_algebra",
+    "MATH2120": "calculus",
+    "MATH2130": "calculus",
+    "MATH2210": "calculus",
+    "MATH2310": "abstract_algebra",
+    "MATH2410": "discrete_math",
+    "MATH3110": "linear_algebra",
+    "MATH3120": "calculus",
+    "MATH3210": "linear_algebra",
+    "MATH3310": "abstract_algebra",
+    "MATH3320": "abstract_algebra",
+    "MATH3410": "discrete_math",
+    "STAT2001": "statistics",
+    "STAT2010": "statistics",
+    "STAT3010": "statistics",
+    "COMP2201": "discrete_math"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "university_rules": {
+    "total_credits_for_degree": 93,
+    "level_1_credits_required": 24,
+    "level_2_3_credits_required": 60,
+    "foundation_credits_required": 9,
+    "min_in_faculty_level_1_credits": 18,
+    "min_in_faculty_level_2_3_credits": 30
+  },
+  "registration_limits": {
+    "part_1": {
+      "min_credits_per_semester": 0,
+      "max_credits_per_semester": 18,
+      "min_total_credits_for_part_2": 0
+    },
+    "part_2": {
+      "min_credits_per_semester": 0,
+      "max_credits_per_semester": 18
+    }
+  },
+  "foundation_courses": {
+    "max_per_semester": 2,
+    "must_complete_in_year": 1,
+    "required_blocks": [
+      {
+        "type": "choose_one",
+        "options": ["FOUN1014", "FOUN1019"],
+        "credits": 3,
+        "offered": ["1", "2"],
+        "description": "Critical Reading and Writing"
+      },
+      {
+        "type": "course",
+        "code": "FOUN1101",
+        "credits": 3,
+        "offered": ["1", "2"],
+        "description": "Caribbean Civilization"
+      },
+      {
+        "type": "course",
+        "code": "FOUN1301",
+        "credits": 3,
+        "offered": ["1", "2"],
+        "description": "Law, Governance, Economy and Society"
+      }
+    ]
+  }
+}
