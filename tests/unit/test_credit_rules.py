@@ -1,9 +1,10 @@
+# Credit totals and foundation limits.
 
 import unittest
 from copy import deepcopy
 
-from csp.data_loader import load_courses, load_constraints
-from csp.credit_rules import (
+from csp.data import load_courses, load_constraints
+from csp.constraints import (
     calculate_semester_credits,
     get_foundation_codes,
     semester_load_valid
@@ -102,7 +103,7 @@ class TestCreditRules(unittest.TestCase):
 
         codes = ["COMP1126"]
 
-        # Partial CSP assignments can be under the minimum.
+        # An unfinished CSP assignment can be under the minimum.
         self.assertTrue(
             semester_load_valid(
                 codes, self.courses, rules

@@ -1,8 +1,9 @@
+# Individual, nested, and permission prerequisites.
 
 import unittest
 
-from csp.data_loader import load_courses
-from csp.prerequisites import (
+from csp.data import load_courses
+from csp.constraints import (
     prerequisites_satisfied,
     split_conditions
 )
@@ -119,6 +120,33 @@ class TestPrerequisites(unittest.TestCase):
                 self.courses
             )
         )
+
+    def test_prerequisite_outside_catalogue(self):
+        courses = {
+            "MATH3410": {"prerequisites": "MATH2410"},
+            "COMP2201": {"prerequisites": "OR(MATH2410; COMP1210)"},
+            "COMP1210": {"prerequisites": "NONE"}
+        }
+        cases = [
+            ("MATH3410", set(), False),
+            ("MATH3410", {"MATH2410"}, True),
+            ("COMP2201", set(), False),
+            ("COMP2201", {"MATH2410"}, True),
+            ("COMP2201", {"COMP1210"}, True)
+        ]
+
+        for code, completed, expected in cases:
+            with self.subTest(code=code, completed=completed):
+                self.assertEqual(
+                    prerequisites_satisfied(code, completed, courses),
+                    expected
+                )
+
+    def test_unrecognized_condition(self):
+        courses = {"MATH3410": {"prerequisites": "UNSUPPORTED_RULE"}}
+
+        with self.assertRaisesRegex(ValueError, "Unrecognized condition"):
+            prerequisites_satisfied("MATH3410", set(), courses)
 
 
 if __name__ == "__main__":

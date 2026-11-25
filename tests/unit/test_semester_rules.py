@@ -1,8 +1,9 @@
+# Course offerings and semester domains.
 
 import unittest
 
-from csp.data_loader import load_courses
-from csp.semester_rules import (
+from csp.data import load_courses
+from csp.constraints import (
     build_semesters,
     get_offered_terms,
     is_course_offered,
