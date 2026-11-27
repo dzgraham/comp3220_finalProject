@@ -12,11 +12,14 @@ Requires **Python 3.10+**. No third-party packages are needed.
 Run commands from the project root:
 
 ```powershell
-# Computer Science with default settings
+# Computer Science without math courses (partial with the supplied catalogue)
 python csp_solver.py
 
-# AI & Data Science specialization
-python csp_solver.py --major computer_science --track ai_data
+# AI & Data Science with an optional math track
+python csp_solver.py --major computer_science --track ai_data --math-track calculus
+
+# Specialization tracks are available with any major
+python csp_solver.py --major computer_science --track web_systems --math-track statistics
 
 # All command-line options
 python csp_solver.py --help
@@ -29,7 +32,23 @@ python csp_solver.py --help
 | Cybersecurity | `cybersecurity` |
 | Software Engineering | `software_engineering` |
 
-Specializations prioritize electives without changing compulsory requirements.
+Majors determine compulsory courses and degree elective requirements. Specialization
+tracks are shared by all majors and prioritize electives without changing compulsory
+requirements. The planner loads majors, tracks, and math tracks from `tracks2.json`.
+
+`--math-track` is optional and independent of `--track`. Choices are `linear_algebra`,
+`statistics`, `calculus`, `abstract_algebra`, and `discrete_math`. Selecting one enables
+MATH and STAT courses, including prerequisites, and prioritizes that track's electives.
+Preferences remain subject to prerequisites, credit requirements, and timetable limits.
+Without a math track, MATH and STAT courses are excluded from full and partial plans.
+Required Computing courses such as COMP1210 and COMP2201 remain compulsory.
+
+The supplied catalogue contains only 15 non-foundation, non-math Level 1 credits,
+so a plan without math is at least 9 Level 1 credits short of the 24-credit target.
+The planner reports a partial degree instead of adding math automatically. The default
+Computer Science plan schedules 84 credits and exits with code 1. Additional eligible
+Level 1 courses in the catalogue would be needed to complete it without math.
+
 Software Engineering needs departmental approval for `COMP3911`; use
 `--approved-courses COMP3911` when approved. `--include-summer` adds Semester 3
 to each planning year. The CLI shows unused terms as "No courses assigned";
@@ -41,7 +60,8 @@ summer availability does not require the planner to put courses there.
 from csp_solver import generate_full_degree_plan
 
 result = generate_full_degree_plan(
-    major="computer_science", track="ai_data", years=3, max_nodes=20000
+    major="computer_science", track="ai_data", math_track="calculus",
+    years=3, max_nodes=20000
 )
 
 for semester, courses in result["plan"].items():
@@ -50,7 +70,7 @@ for semester, courses in result["plan"].items():
 print(result["status"], result["credit_shortfall"])
 ```
 
-Optional arguments include `include_summer`, `approved_courses`, and
+Optional arguments include `math_track`, `include_summer`, `approved_courses`, and
 `allow_unknown`. Planning starts from the beginning of the degree.
 
 ## Results
@@ -62,6 +82,7 @@ Optional arguments include `include_summer`, `approved_courses`, and
 - `missing_courses`, `missing_credits`, `credit_shortfall`, and
   `unsatisfied_requirements`: what is still needed.
 - `nodes_explored`, `backtracks`, and `execution_time`: search statistics.
+- `major`, `track`, and `math_track`: selected planning options; omitted tracks are `None`.
 
 Unknown times remain flagged in `tentative_courses` and `timetable_status`.
 Use `--strict-timetable` or `allow_unknown=False` to reject them. The supplied

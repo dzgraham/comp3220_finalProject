@@ -6,8 +6,9 @@ from collections import Counter
 from itertools import combinations
 
 COMPUTING_PREFIXES = {"COMP", "INFO", "SWEN"}
+MATH_PREFIXES = {"MATH", "STAT"}
 # Preserve the existing dataset's faculty classification.
-FACULTY_PREFIXES = COMPUTING_PREFIXES | {"MATH", "STAT"}
+FACULTY_PREFIXES = COMPUTING_PREFIXES | MATH_PREFIXES
 
 _condition_cache = {}
 

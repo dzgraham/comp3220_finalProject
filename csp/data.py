@@ -49,11 +49,29 @@ def load_constraints():
 
 def load_tracks():
     with open(
-        BASE_DIR / "tracks.json",
+        BASE_DIR / "tracks2.json",
         "r",
         encoding="utf-8"
     ) as file:
         return json.load(file)
+
+
+def get_track_preferences(tracks, track=None, math_track=None):
+    # Specializations are shared by every major; math is a separate opt-in.
+    preferred = []
+    for category, choice, label in (
+        ("tracks", track, "track"),
+        ("math_tracks", math_track, "math track")
+    ):
+        if choice is None:
+            continue
+        options = tracks.get(category, {})
+        if choice not in options:
+            raise ValueError(f"Unknown {label}: {choice}")
+        for code in options[choice]["preferred_electives"]:
+            if code not in preferred:
+                preferred.append(code)
+    return preferred
 
 
 def get_degree_blueprint(major, courses, constraints, tracks):

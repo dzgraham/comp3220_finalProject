@@ -19,7 +19,8 @@ class TestDatasetIntegration(unittest.TestCase):
         cls.courses = load_courses()
 
     def test_complete_93_credit_ai_data_degree(self):
-        result = generate_full_degree_plan("computer_science", "ai_data", max_nodes=2000)
+        result = generate_full_degree_plan("computer_science", "ai_data",
+                                           math_track="calculus", max_nodes=2000)
         self.assertTrue(result["success"], result["reason"])
         self.assertTrue(result["complete"])
         self.assertTrue(result["verified"])
@@ -38,16 +39,44 @@ class TestDatasetIntegration(unittest.TestCase):
             prior.update(codes)
         self.assertEqual(result["status"], "tentative")
         self.assertTrue(set(result["tentative_courses"]).issuperset({"FOUN1014", "FOUN1101", "FOUN1301"}))
+        self.assertEqual(result["math_track"], "calculus")
+        self.assertTrue(any(c.startswith("MATH") for c in scheduled))
 
-    def test_command_line_defaults_to_a_complete_degree(self):
+    def test_command_line_defaults_to_no_math_and_reports_shortfall(self):
         script = Path(__file__).resolve().parents[2] / "csp_solver.py"
         result = subprocess.run(
             [sys.executable, "-B", str(script)],
             capture_output=True, text=True, check=False
         )
-        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.returncode, 1, result.stderr)
         self.assertIn("Major: computer_science", result.stdout)
+        self.assertIn("Math track: None", result.stdout)
+        self.assertIn("Status: partial", result.stdout)
+        self.assertIn("Credits still needed: 9", result.stdout)
+        self.assertNotIn("  MATH", result.stdout)
+        self.assertNotIn("  STAT", result.stdout)
+
+    def test_command_line_accepts_independent_track_and_math_choices(self):
+        script = Path(__file__).resolve().parents[2] / "csp_solver.py"
+        result = subprocess.run(
+            [sys.executable, "-B", str(script), "--track", "web_systems",
+             "--math-track", "calculus"],
+            capture_output=True, text=True, check=False
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Track: web_systems", result.stdout)
+        self.assertIn("Math track: calculus", result.stdout)
         self.assertIn("Total scheduled credits: 93", result.stdout)
+
+    def test_public_api_defaults_to_no_math(self):
+        result = generate_full_degree_plan("computer_science", "ai_data", max_nodes=2000)
+        self.assertEqual(result["status"], "partial")
+        self.assertTrue(result["verified"])
+        self.assertIsNone(result["math_track"])
+        self.assertEqual(result["missing_credits"]["level1"], 9)
+        self.assertFalse(any(c.startswith(("MATH", "STAT")) for c in result["selected_courses"]))
+        self.assertIn("COMP1210", result["selected_courses"])
+        self.assertIn("COMP2201", result["selected_courses"])
 
     def test_command_line_rejects_course_lists(self):
         script = Path(__file__).resolve().parents[2] / "csp_solver.py"
@@ -61,7 +90,7 @@ class TestDatasetIntegration(unittest.TestCase):
     def test_command_line_shows_all_semesters_when_summer_is_enabled(self):
         script = Path(__file__).resolve().parents[2] / "csp_solver.py"
         result = subprocess.run(
-            [sys.executable, "-B", str(script), "--include-summer"],
+            [sys.executable, "-B", str(script), "--include-summer", "--math-track", "calculus"],
             capture_output=True, text=True, check=False
         )
         self.assertEqual(result.returncode, 0, result.stderr)

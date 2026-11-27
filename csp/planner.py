@@ -2,22 +2,25 @@
 
 import argparse
 
-from csp.constraints import TimetableIndex, build_semesters, validate_semester_plan
+from csp.constraints import MATH_PREFIXES, TimetableIndex, build_semesters, validate_semester_plan
 from csp.course_selection import (
     SelectionInfeasible, search_degree_courses, validate_degree_selection
 )
-from csp.data import load_courses, load_constraints, load_tracks, get_degree_blueprint
+from csp.data import (
+    load_courses, load_constraints, load_tracks, get_degree_blueprint, get_track_preferences
+)
 from csp.search import SearchBudget
 from csp.solver import _find_partial_degree_plan
 
 
 def verify_degree_plan(major, selected_courses, plan, courses, constraints, tracks,
-                       semesters, approved_courses=None, allow_unknown=True):
+                       semesters, approved_courses=None, allow_unknown=True, *, math_track=None):
     # Verify actual courses and semesters independently of search caches.
     # Check graduation requirements and semester assignments separately.
 
     selection = validate_degree_selection(
-        major, selected_courses, courses, constraints, tracks, approved_courses
+        major, selected_courses, courses, constraints, tracks, approved_courses,
+        math_track=math_track
     )
 
     schedule = validate_semester_plan(
@@ -31,7 +34,7 @@ def verify_degree_plan(major, selected_courses, plan, courses, constraints, trac
             "tentative_courses": schedule["tentative_courses"]}
 
 
-def _degree_candidates(major, track, blueprint, courses, tracks):
+def _degree_candidates(blueprint, courses, preferred, math_track):
     # Keep compulsory courses first, then try foundation and preferred options.
     ordered = blueprint["required_level1"] + blueprint["required_advanced"]
     required = set(ordered)
@@ -45,14 +48,15 @@ def _degree_candidates(major, track, blueprint, courses, tracks):
         ordered.extend(options)
         required.update(options)
 
-    if track is not None:
-        ordered.extend(tracks["tracks"][major][track]["preferred_electives"])
+    ordered.extend(preferred)
     ordered.extend(courses)
 
     candidates = []
     seen = set()
 
     for code in ordered:
+        if math_track is None and code[:4] in MATH_PREFIXES:
+            continue
         if code in courses and code not in seen:
             candidates.append(code)
             seen.add(code)
@@ -89,25 +93,24 @@ def _describe_requirements(result, blueprint, checked):
 
 def plan_degree(major, courses, constraints, tracks, track=None, years=3,
                 include_summer=False, approved_courses=None, allow_unknown=True,
-                max_nodes=20000):
+                max_nodes=20000, *, math_track=None):
     # Try a full degree first, then keep a valid incomplete schedule if needed.
 
     budget = SearchBudget(max_nodes)
     semesters = build_semesters(years, include_summer)
     blueprint = get_degree_blueprint(major, courses, constraints, tracks)
 
-    if track is not None and track not in tracks.get("tracks", {}).get(major, {}):
-        raise ValueError(f"Unknown track for {major}: {track}")
+    preferred = get_track_preferences(tracks, track, math_track)
 
     timetable = TimetableIndex(courses)
     approved = set(approved_courses or [])
-    candidates, required = _degree_candidates(major, track, blueprint, courses, tracks)
+    candidates, required = _degree_candidates(blueprint, courses, preferred, math_track)
     progress = {"plan": {}, "score": (0, 0), "required_courses": required,
                 "tentative_courses": []}
 
     result = {
         "success": False, "complete": False, "verified": False,
-        "major": major, "track": track,
+        "major": major, "track": track, "math_track": math_track,
         "required_credits": blueprint["targets"]["total"],
         "selected_credits": 0, "scheduled_credits": 0, "selected_courses": [],
         "elective_selections": {}, "plan": {}, "semester_credits": {},
@@ -123,7 +126,8 @@ def plan_degree(major, courses, constraints, tracks, track=None, years=3,
         # Full scheduling saves safe progress before undoing failed assignments.
         outcome = search_degree_courses(
             major, courses, constraints, tracks, track, approved, years,
-            max_nodes, include_summer, allow_unknown, semesters=semesters,
+            max_nodes, include_summer, allow_unknown,
+            math_track=math_track, semesters=semesters,
             _budget=budget, _timetable=timetable, _partial=progress
         )
     except SelectionInfeasible as error:
@@ -163,7 +167,8 @@ def plan_degree(major, courses, constraints, tracks, track=None, years=3,
     result["selected_credits"] = result["scheduled_credits"]
 
     checked = validate_degree_selection(
-        major, result["selected_courses"], courses, constraints, tracks, approved
+        major, result["selected_courses"], courses, constraints, tracks, approved,
+        math_track=math_track
     )
     result["elective_selections"] = checked["elective_selections"]
     _describe_requirements(result, blueprint, checked)
@@ -211,20 +216,24 @@ def plan_degree(major, courses, constraints, tracks, track=None, years=3,
 
 def generate_full_degree_plan(major, track=None, years=3, include_summer=False,
                               approved_courses=None, allow_unknown=True,
-                              max_nodes=20000):
+                              max_nodes=20000, *, math_track=None):
     # Plan a full degree and return a valid partial fallback when needed.
 
     return plan_degree(
         major, load_courses(), load_constraints(), load_tracks(), track, years,
-        include_summer, approved_courses, allow_unknown, max_nodes
+        include_summer, approved_courses, allow_unknown, max_nodes, math_track=math_track
     )
 
 
 def main():
     parser = argparse.ArgumentParser(description="CSP full-degree planner")
-    parser.add_argument("--major", default="computer_science",
+    tracks = load_tracks()
+    parser.add_argument("--major", default="computer_science", choices=tracks["majors"],
                         help="Major to plan (default: computer_science)")
-    parser.add_argument("--track", help="Specialization within the selected major")
+    parser.add_argument("--track", choices=tracks["tracks"],
+                        help="Elective specialization, available to every major")
+    parser.add_argument("--math-track", choices=tracks["math_tracks"],
+                        help="Optional math specialization; enables MATH and STAT courses")
     parser.add_argument("--years", type=int, default=3)
     parser.add_argument("--include-summer", action="store_true")
     parser.add_argument("--strict-timetable", action="store_true")
@@ -233,7 +242,7 @@ def main():
 
     args = parser.parse_args()
 
-    options = dict(years=args.years, include_summer=args.include_summer,
+    options = dict(math_track=args.math_track, years=args.years, include_summer=args.include_summer,
                    allow_unknown=not args.strict_timetable,
                    approved_courses=args.approved_courses, max_nodes=args.max_nodes)
 
@@ -247,6 +256,8 @@ def main():
 
     if result["track"] is not None:
         print("Track:", result["track"])
+
+    print("Math track:", result["math_track"] or "None")
 
     print("Status:", result["status"])
 

@@ -1,11 +1,11 @@
 # Select degree courses using ordinary recursive backtracking.
 
 from csp.constraints import (
-    COMPUTING_PREFIXES, FACULTY_PREFIXES, TimetableIndex, build_semesters,
+    COMPUTING_PREFIXES, FACULTY_PREFIXES, MATH_PREFIXES, TimetableIndex, build_semesters,
     find_overloaded_term_clique, get_foundation_codes, get_offered_terms,
     prerequisites_satisfied
 )
-from csp.data import get_degree_blueprint
+from csp.data import get_degree_blueprint, get_track_preferences
 from csp.search import SearchBudget
 from csp.solver import solve_degree_plan
 
@@ -103,9 +103,10 @@ def _elective_assignment(extras, blocks, courses, budget=None):
 
 
 def validate_degree_selection(major, course_codes, courses, constraints, tracks,
-                              approved_courses=None, *, _budget=None):
+                              approved_courses=None, *, math_track=None, _budget=None):
     """Check graduation rules from the supplied JSON and course catalogue."""
     blueprint = get_degree_blueprint(major, courses, constraints, tracks)
+    get_track_preferences(tracks, math_track=math_track)
     codes = list(course_codes)
     selected = set(codes)
     errors = []
@@ -114,6 +115,10 @@ def validate_degree_selection(major, course_codes, courses, constraints, tracks,
     for code in codes:
         if code not in courses:
             return {"valid": False, "errors": ["Unknown selected courses"]}
+    if math_track is None:
+        math_courses = sorted(code for code in selected if code[:4] in MATH_PREFIXES)
+        if math_courses:
+            errors.append("Math courses require a math track: " + ", ".join(math_courses))
 
     compulsory = set(blueprint["required_level1"] + blueprint["required_advanced"])
     missing = compulsory - selected
@@ -222,7 +227,7 @@ def _remaining_credit_totals(options, courses, level1_target, advanced_target):
 def search_degree_courses(major, courses, constraints, tracks, track=None,
                           approved_courses=None, years=3, max_nodes=20000,
                           include_summer=False, allow_unknown=True, *,
-                          semesters=None, find_all=False, _budget=None,
+                          math_track=None, semesters=None, find_all=False, _budget=None,
                           _timetable=None, _partial=None):
     """Choose courses recursively and optionally schedule each complete choice."""
     # Reuse the planner's budget so changing electives does not reset the limit.
@@ -236,12 +241,7 @@ def search_degree_courses(major, courses, constraints, tracks, track=None,
     if planning_semesters is None:
         planning_semesters = build_semesters(years, include_summer)
     blueprint = get_degree_blueprint(major, courses, constraints, tracks)
-    track_options = tracks.get("tracks", {}).get(major, {})
-    if track is not None and track not in track_options:
-        raise ValueError(f"Unknown track for {major}: {track}")
-    preferred = []
-    if track is not None:
-        preferred = track_options[track]["preferred_electives"]
+    preferred = get_track_preferences(tracks, track, math_track)
     approved = set(approved_courses or [])
     core = blueprint["required_level1"] + blueprint["required_advanced"]
     foundation_codes = get_foundation_codes(constraints)
@@ -251,6 +251,8 @@ def search_degree_courses(major, courses, constraints, tracks, track=None,
     available = set()
     # Only consider courses offered during this planning period.
     for code, course in courses.items():
+        if math_track is None and code[:4] in MATH_PREFIXES:
+            continue
         offered = set(get_offered_terms(code, courses))
         if not offered.intersection(terms):
             continue
@@ -285,7 +287,10 @@ def search_degree_courses(major, courses, constraints, tracks, track=None,
         department_rank = 1
         if code[:4] in COMPUTING_PREFIXES:
             department_rank = 0
-        return (rank, department_rank, code)
+        # Choose Level 1 support before advanced electives so math prerequisites
+        # can prune unsuitable combinations early.
+        level_rank = 0 if courses[code]["level"] == 1 else 1
+        return (level_rank, rank, department_rank, code)
 
     options = sorted(available - set(core) - foundation_codes, key=candidate_order)
     level1_needed = blueprint["remaining_credits"]["level1"]
@@ -296,7 +301,8 @@ def search_degree_courses(major, courses, constraints, tracks, track=None,
 
     def complete_selection():
         checked = validate_degree_selection(
-            major, selected, courses, constraints, tracks, approved, _budget=budget
+            major, selected, courses, constraints, tracks, approved,
+            math_track=math_track, _budget=budget
         )
         if not checked["valid"]:
             budget.pruned_branches += 1
@@ -304,7 +310,8 @@ def search_degree_courses(major, courses, constraints, tracks, track=None,
         budget.selection_attempts += 1
         # Save a copy because later backtracking changes the selected list.
         selection = {
-            "major": major, "track": track, "course_codes": selected.copy(),
+            "major": major, "track": track, "math_track": math_track,
+            "course_codes": selected.copy(),
             "total_credits": checked["total_credits"],
             "level1_credits": checked["level1_credits"],
             "advanced_credits": checked["advanced_credits"],
@@ -430,12 +437,12 @@ def search_degree_courses(major, courses, constraints, tracks, track=None,
 
 def select_degree_courses(major, courses, constraints, tracks, track=None,
                           approved_courses=None, years=3, max_nodes=20000,
-                          include_summer=False, allow_unknown=True):
+                          include_summer=False, allow_unknown=True, *, math_track=None):
     """Return the first academically valid selection without scheduling it."""
     budget = SearchBudget(max_nodes)
     outcome = search_degree_courses(
         major, courses, constraints, tracks, track, approved_courses, years,
-        max_nodes, include_summer, allow_unknown, _budget=budget
+        max_nodes, include_summer, allow_unknown, math_track=math_track, _budget=budget
     )
     if budget.limit_reached:
         raise ValueError("Search limit reached during course selection")
@@ -446,12 +453,13 @@ def select_degree_courses(major, courses, constraints, tracks, track=None,
 
 def find_degree_selections(major, courses, constraints, tracks, track=None,
                           approved_courses=None, years=3, max_nodes=20000,
-                          include_summer=False, allow_unknown=True):
+                          include_summer=False, allow_unknown=True, *, math_track=None):
     """Return a normal list of all selections found within the node budget."""
     budget = SearchBudget(max_nodes)
     outcome = search_degree_courses(
         major, courses, constraints, tracks, track, approved_courses, years,
-        max_nodes, include_summer, allow_unknown, find_all=True, _budget=budget
+        max_nodes, include_summer, allow_unknown, math_track=math_track,
+        find_all=True, _budget=budget
     )
     if budget.limit_reached:
         raise ValueError("Search limit reached before all course selections were checked")

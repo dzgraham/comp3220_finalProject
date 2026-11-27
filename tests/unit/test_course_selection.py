@@ -22,7 +22,8 @@ class TestCourseSelection(unittest.TestCase):
         self,
         major,
         track=None,
-        approved_courses=None
+        approved_courses=None,
+        math_track="linear_algebra"
     ):
         return select_degree_courses(
             major,
@@ -30,7 +31,8 @@ class TestCourseSelection(unittest.TestCase):
             self.constraints,
             self.tracks,
             track=track,
-            approved_courses=approved_courses
+            approved_courses=approved_courses,
+            math_track=math_track
         )
 
     def test_cs_degree_total(self):
@@ -119,6 +121,22 @@ class TestCourseSelection(unittest.TestCase):
                 "computer_science",
                 "invalid_track"
             )
+
+        with self.assertRaisesRegex(ValueError, "Unknown math track"):
+            self.choose("computer_science", math_track="invalid_math")
+
+    def test_specializations_are_available_across_majors(self):
+        # These tracks previously belonged to IT and Software Engineering.
+        for track in ("web_systems", "mobile_apps"):
+            with self.subTest(track=track):
+                result = self.choose("computer_science", track)
+                required = self.tracks["majors"]["computer_science"]
+                self.assertTrue(set(required["advanced_required"]).issubset(result["course_codes"]))
+                self.assertEqual(result["track"], track)
+
+    def test_catalogue_cannot_fill_level1_without_math(self):
+        with self.assertRaisesRegex(ValueError, "No valid degree course selection"):
+            self.choose("computer_science", math_track=None)
 
 
 class TestSelectionSearch(unittest.TestCase):
