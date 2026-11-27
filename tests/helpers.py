@@ -40,6 +40,6 @@ def make_degree_fixture():
                 "from_level": [2], "from_dept": "Computing"
             }]
         }},
-        "tracks": {"test": {"preferred": {"preferred_electives": ["COMP2001"]}}}
+        "tracks": {"preferred": {"preferred_electives": ["COMP2001"]}}
     }
     return courses, constraints, tracks

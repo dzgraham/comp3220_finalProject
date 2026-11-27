@@ -49,7 +49,7 @@ class TestIntegratedSearch(unittest.TestCase):
         self.tracks["majors"]["test"]["level1_required"] = []
         self.tracks["majors"]["test"]["advanced_required"] = ["COMP2001"]
         self.tracks["majors"]["test"]["elective_blocks"] = []
-        self.tracks["tracks"]["test"]["preferred"]["preferred_electives"] = ["COMP1001"]
+        self.tracks["tracks"]["preferred"]["preferred_electives"] = ["COMP1001"]
         result = self.plan()
         self.assertTrue(result["success"])
         self.assertIn("COMP1002", result["selected_courses"])

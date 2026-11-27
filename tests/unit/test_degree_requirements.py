@@ -1,6 +1,8 @@
 # Compulsory courses and graduation targets.
 
 import unittest
+import json
+from pathlib import Path
 
 from csp.data import (
     load_courses,
@@ -63,6 +65,10 @@ class TestDegreeRequirements(unittest.TestCase):
     def test_invalid_major(self):
         with self.assertRaises(ValueError):
             self.blueprint("invalid_major")
+
+    def test_tracks_are_loaded_from_tracks2(self):
+        path = Path(__file__).resolve().parents[2] / "tracks2.json"
+        self.assertEqual(self.tracks, json.loads(path.read_text(encoding="utf-8")))
 
 
 if __name__ == "__main__":
